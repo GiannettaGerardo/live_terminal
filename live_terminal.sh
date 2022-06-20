@@ -1,15 +1,5 @@
 #!/bin/bash
 
-# refresh the command line
-#
-# @param $1 main file for the check
-# @param $2 directory to monitor
-__refresh() {
-   echo -en "\ec"
-   ls -la --color=auto "$2"
-   ls -la "$2" > "$1"
-}
-
 # check if the exists an argument for the script and if it's a directory
 __check_arguments() {
    if [[ -z "$1" ]]
@@ -32,7 +22,9 @@ main() {
    local file=".f.txt"
    local result=""
 
-   __refresh "$file" "$1"
+   echo -en "\ec"
+   ls -la --color=auto "$1"
+   ls -la "$1" > "$file"
 
    while true; do
 
@@ -40,7 +32,9 @@ main() {
 
       if [[ ! -z "$result" ]]
       then
-         __refresh "$file" "$1"
+         echo -en "\ec"
+         ls -la --color=auto "$1"
+         ls -la "$1" > "$file"
       fi
 
       result=""
