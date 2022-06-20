@@ -57,13 +57,13 @@ fn build_list(raw_path: &Path) -> OsString {
 }
 
 fn main() {
-    let path = Path::new("/home/gg/Scrivania");
+    let path = Path::new("/");
     let millis = time::Duration::from_millis(100);
 
     let mut main_string = build_list(path);
     println!("{}", main_string.to_str().unwrap());
 
-    for _i in 0..50 {
+    loop {
         thread::sleep(millis);
 
         let new_string = build_list(path);
