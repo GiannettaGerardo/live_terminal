@@ -83,6 +83,7 @@ fn main() {
     let millis = time::Duration::from_millis(100);
 
     let mut main_string = build_list(path);
+    print!("{esc}c", esc = 27 as char);
     println!("{}", main_string.to_str().unwrap());
 
     loop {
