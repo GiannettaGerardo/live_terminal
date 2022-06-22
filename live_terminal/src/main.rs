@@ -1,12 +1,15 @@
 use std::ffi::OsString;
 use std::io::{BufWriter, Write, stdout};
-use std::os::unix::prelude::MetadataExt;
+use std::os::unix::prelude::{MetadataExt, PermissionsExt};
 use std::{thread, time};
-use std::{fs, os::{unix::prelude::PermissionsExt}, path::Path};
+use std::{fs, path::Path};
 use colored::Colorize;
+use users::{UsersCache, Users, Groups};
 
-fn build_list(raw_path: &Path) -> OsString {
-    let dir = fs::read_dir(raw_path).expect("It is impossibile to read thi Directory...");
+
+fn build_list(raw_path: &Path, cache: &UsersCache) -> OsString {
+    let dir = fs::read_dir(raw_path)
+                        .expect("It is impossibile to read thi Directory...");
     let mut list_string = OsString::new();
 
     for path in dir {
@@ -31,33 +34,53 @@ fn build_list(raw_path: &Path) -> OsString {
 
         let m: u32 = meta.permissions().mode();
         let is_dir = meta.is_dir();
-        let mut count_x = 0;
+        let uid = meta.uid();
+        let gid = meta.gid();
+        let mut count_x: u8 = 0;
 
         list_string.push(if is_dir {"d"}else{"-"});
         list_string.push(if m & (0x1<<8) >= 1 {"r"}else{"-"});
         list_string.push(if m & (0x1<<7) >= 1 {"w"}else{"-"});
-        list_string.push(if m & (0x1<<6) >= 1 {
-            count_x += 1;
-            "x"
-        } else {"-"});
+        list_string.push(
+            if m & (0x1<<6) >= 1 {
+                count_x += 1;
+                "x"
+            } else {"-"}
+        );
         list_string.push(if m & (0x1<<5) >= 1 {"r"}else{"-"});
         list_string.push(if m & (0x1<<4) >= 1 {"w"}else{"-"});
-        list_string.push(if m & (0x1<<3) >= 1 {
-            count_x += 1;
-            "x"
-        } else {"-"});
+        list_string.push(
+            if m & (0x1<<3) >= 1 {
+                count_x += 1;
+                "x"
+            } else {"-"}
+        );
         list_string.push(if m & (0x1<<2) >= 1 {"r"}else{"-"});
         list_string.push(if m & (0x1<<1) >= 1 {"w"}else{"-"});
-        list_string.push(if m & 0x1 >= 1 {
-            count_x += 1;
-            "x"
-        } else {"-"});
+        list_string.push(
+            if m & 0x1 >= 1 {
+                count_x += 1;
+                "x"
+            } else {"-"}
+        );
  
         list_string.push(" ");
-        list_string.push(meta.uid().to_string());
+
+        if let Some(user) = cache.get_user_by_uid(uid) {
+            list_string.push(user.name().to_os_string());
+        } else {
+            list_string.push(uid.to_string());
+        }
         list_string.push(" ");
-        list_string.push(meta.gid().to_string());
+
+        if let Some(group) = cache.get_group_by_gid(gid) {
+            list_string.push(group.name().to_os_string());
+        }
+        else {
+            list_string.push(gid.to_string());
+        }
         list_string.push(" ");
+
         list_string.push(meta.len().to_string());
         list_string.push(" ");
         if is_dir {
@@ -78,18 +101,20 @@ fn build_list(raw_path: &Path) -> OsString {
     list_string
 }
 
-fn main() {
-    let path = Path::new("/");
-    let millis = time::Duration::from_millis(100);
 
-    let mut main_string = build_list(path);
+fn main() {
+    let path = Path::new("/home/gg/Scrivania");
+    let millis = time::Duration::from_millis(100);
+    let mut cache = UsersCache::new();
+
+    let mut main_string = build_list(path, &mut cache);
     print!("{esc}c", esc = 27 as char);
-    println!("{}", main_string.to_str().unwrap());
+    println!("{}", main_string.to_str().expect("It is impossible to read the result"));
 
     loop {
         thread::sleep(millis);
 
-        let new_string = build_list(path);
+        let new_string = build_list(path, &mut cache);
 
         if main_string != new_string {
             main_string = new_string;
