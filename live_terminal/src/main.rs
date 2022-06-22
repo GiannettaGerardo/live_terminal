@@ -83,12 +83,12 @@ fn build_list(raw_path: &Box<Path>, cache: &UsersCache) -> String {
         list_string.push_str(&meta.len().to_string());
         list_string.push(' ');
         if is_dir {
-            list_string.push_str(&file_name.blue().bold().to_string());
+            list_string.push_str(&file_name.blue().bold()[..]);
             list_string.push('/');
         }
         else {
             if count_x == 3 {
-                list_string.push_str(&file_name.green().bold().to_string());
+                list_string.push_str(&file_name.green().bold()[..]);
                 list_string.push('*');
             } 
             else {
