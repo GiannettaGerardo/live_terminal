@@ -35,6 +35,7 @@ fn build_list(raw_path: &Box<Path>, cache: &UsersCache) -> String {
         let is_dir = meta.is_dir();
         let uid = meta.uid();
         let gid = meta.gid();
+        let modified: chrono::DateTime<chrono::Local> = meta.modified().ok().unwrap().into();
         let mut count_x: u8 = 0;
 
         list_string.push(if is_dir {'d'}else{'-'});
@@ -82,13 +83,17 @@ fn build_list(raw_path: &Box<Path>, cache: &UsersCache) -> String {
 
         list_string.push_str(&meta.len().to_string());
         list_string.push(' ');
+
+        list_string.push_str(&modified.format("%y-%m-%d %H:%M:%S").to_string());
+
+        list_string.push(' ');
         if is_dir {
-            list_string.push_str(&file_name.blue().bold()[..]);
+            list_string.push_str(&file_name.blue().bold().to_string());
             list_string.push('/');
         }
         else {
             if count_x == 3 {
-                list_string.push_str(&file_name.green().bold()[..]);
+                list_string.push_str(&file_name.green().bold().to_string());
                 list_string.push('*');
             } 
             else {
