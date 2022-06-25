@@ -6,10 +6,10 @@ use colored::Colorize;
 use users::{UsersCache, Users, Groups};
 
 
-fn build_list(raw_path: &Box<Path>, cache: &UsersCache) -> String {
+fn build_list(raw_path: &Box<Path>, cache: &UsersCache, init_capacity: usize) -> String {
     let dir = fs::read_dir(raw_path)
                         .expect("It is impossibile to read thi Directory...");
-    let mut list_string = String::with_capacity(100); // standard initial capacity, for now only 100
+    let mut list_string = String::with_capacity(init_capacity);
 
     for path in dir {
         
@@ -138,14 +138,14 @@ fn main() {
     let millis = time::Duration::from_millis(100);
     let mut cache = UsersCache::new();
 
-    let mut main_string = build_list(&path, &mut cache);
+    let mut main_string = build_list(&path, &mut cache, 1);
     print!("{esc}c", esc = 27 as char); // clear terminal
     println!("{}", main_string);
 
     loop {
         thread::sleep(millis);
 
-        let new_string = build_list(&path, &mut cache);
+        let new_string = build_list(&path, &mut cache, main_string.len());
 
         if main_string != new_string {
             main_string = new_string;
